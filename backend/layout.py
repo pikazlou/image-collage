@@ -2,16 +2,6 @@ import numpy as np
 import random
 from PIL import Image, ImageDraw
 
-GRID_WIDTH = 12
-GRID_HEIGHT = 12
-
-SUPPORTED_TILES = [
-    (3, 3),
-    (3, 4),
-    (4, 3),
-    (4, 4)
-]
-
 
 def partition(n, numbers):
     """
@@ -61,16 +51,6 @@ def try_layout(width, height, tiles):
             else:
                 x = 0
                 y = 0
-
-            # x = cols[0]
-            # y = rows[0]
-
-            # for i in range(cols.size):
-            #     x = cols[i]
-            #     y = rows[i]
-            #     if ((x == 0) or (matrix[x-1, y] > 0)) and ((y == 0) or (matrix[x, y-1] > 0)):
-            #         insert_points.append((x, y))
-            # x, y = random.choice(insert_points)
 
             restrictions = []
             if x > 0:
@@ -134,28 +114,3 @@ if __name__ == '__main__':
     layout = try_layout(15, 20, [(3, 3), (4, 4), (3, 4), (4, 3), (4, 5), (5, 4), (5, 5)])
     print(layout)
     display_tiles_pil(layout)
-
-    # m = np.zeros((5, 6))
-    # m[0:3, 0:2] = 1
-    # m[0:2, 0:3] = 1
-    # diff_x = np.diff(m, axis=0)
-    # diff_y = np.diff(m, axis=1)
-    #
-    # print(diff_x)
-    # print(diff_y)
-    #
-    # candxx, candxy = np.where(diff_x == -1)
-    # candyx, candyy = np.where(diff_y == -1)
-    # print(np.dstack((candxx + 1, candxy))[0])
-    # print(np.dstack((candyx, candyy + 1))[0])
-    # items = np.append(np.dstack((candxx + 1, candxy))[0], np.dstack((candyx, candyy + 1))[0], axis=0)
-    # for i in items:
-    #     x, y = i
-    #     print(x, y)
-    # print(items.shape)
-
-    # lst = [(1, 2), (2, 4), (5, 5)]
-    # print(lst)
-    # print(lst.index((2, 4)))
-
-    # print(np.zeros((5, 6)) - 100)
