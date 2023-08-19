@@ -136,8 +136,8 @@ window.addEventListener('DOMContentLoaded', function () {
       canvas.toBlob(function (blob) {
         var formData = new FormData();
 
-        formData.append('avatar', blob, 'avatar.jpg');
-        $.ajax('https://jsonplaceholder.typicode.com/posts', {
+        formData.append('file', blob, 'upload.jpg');
+        $.ajax('http://localhost:9000/upload', {
           method: 'POST',
           data: formData,
           processData: false,
