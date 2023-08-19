@@ -111,7 +111,7 @@ window.addEventListener('DOMContentLoaded', function () {
     let aspectRatio = 1.0 * tile_width / tile_height;
     cropper = new Cropper(image, {
       aspectRatio: aspectRatio,
-      viewMode: 3,
+      viewMode: 2,
     });
   }).on('hidden.bs.modal', function () {
     cropper.destroy();
