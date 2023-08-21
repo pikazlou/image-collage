@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw
 
 
-def draw_tiled_images(canvas_width, canvas_height, tiles, images_per_tile, multiplier=50):
+def draw_tiled_images(canvas_width, canvas_height, tiles, images_per_tile, multiplier=150):
     size = (canvas_width * multiplier, canvas_height * multiplier)
     res = Image.new("RGBA", size)
     for tile_index, image  in images_per_tile:

@@ -16,6 +16,9 @@ $(document).ready(function(){
         let mouse_x = e.clientX;
         let mouse_y = e.clientY;
         selected_tile = find_selected_tile(mouse_x - can_rect.left, mouse_y - can_rect.top, tiles, multiplier);
+        if (selected_tile >= 0) {
+            $('#select_file_button').show();
+        }
         draw_tiles(tiles, selected_tile, multiplier, ctx);
     });
 });
@@ -137,6 +140,7 @@ window.addEventListener('DOMContentLoaded', function () {
         var formData = new FormData();
 
         formData.append('file', blob, 'upload.jpg');
+        formData.append('selected_tile', selected_tile);
         $.ajax('http://localhost:9000/upload', {
           method: 'POST',
           data: formData,

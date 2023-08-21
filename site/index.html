@@ -12,13 +12,20 @@
     <link rel="stylesheet" href="style.css?version=3">
 </head>
 <body>
-    <canvas id="canvas" width="300" height="400" style="background-image: url('tiles.jpg'); background-size: 100% 100%;">
-        Your browser doesn't support canvas
-    </canvas>
-    <label class="label">
-        <input type="file" class="sr-only" id="input" name="image" accept="image/*">
-        <div> Push </div>
-    </label>
+    <div style="text-align: center">
+        <canvas id="canvas" width="300" height="400" style="background-image: url('https://belarus-image-collage.s3.eu-central-1.amazonaws.com/tiles.png'); background-size: 100% 100%;">
+            Your browser doesn't support canvas
+        </canvas>
+    </div>
+    <div style="text-align: center">
+        <label id="select_file_button" class="label" style="display: none">
+            <input type="file" class="sr-only" id="input" name="image" accept="image/*">
+            <div style="background-color: #ccaaaa; border-radius: 10px; padding: 5px 20px;"> Push </div>
+        </label>
+    </div>
+    <div class="progress">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+    </div>
     <div class="alert" role="alert"></div>
     <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
