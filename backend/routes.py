@@ -2,7 +2,6 @@ import os
 import json
 from flask import Flask, request, send_from_directory, redirect, url_for
 from waitress import serve
-from werkzeug.utils import secure_filename
 from PIL import Image
 import boto3
 import io
@@ -28,6 +27,7 @@ def serve_static(path):
 
 S3_BUCKET = 'belarus-image-collage'
 S3_KEY = 'tiles.png'
+
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
@@ -64,19 +64,14 @@ def upload_image():
     main_img.save(in_mem_file, format=main_img.format)
     in_mem_file.seek(0)
 
-    s3.upload_fileobj(
-        in_mem_file,  # This is what i am trying to upload
-        S3_BUCKET,
-        S3_KEY,
-        # ExtraArgs={
-        #     'ACL': 'public-read'
-        # }
+    result = s3.put_object(
+        Bucket=S3_BUCKET,
+        Key=S3_KEY,
+        Body=in_mem_file
     )
 
-    # filename = secure_filename(file.filename)
-    # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    return json.dumps({'message': 'OK'})
-    # return redirect(url_for('download_file', name=filename))
+    image_version_id = result['VersionId']
+    return json.dumps({'image_version_id': image_version_id})
 
 
 if __name__ == "__main__":

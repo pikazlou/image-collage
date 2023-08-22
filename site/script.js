@@ -164,8 +164,10 @@ window.addEventListener('DOMContentLoaded', function () {
             return xhr;
           },
 
-          success: function () {
+          success: function (data) {
             $alert.show().addClass('alert-success').text('Upload success');
+            var json = $.parseJSON(data);
+            $('#canvas').css("background-image", "url('https://belarus-image-collage.s3.eu-central-1.amazonaws.com/tiles.png?versionId=" + json['image_version_id'] + "')");
           },
 
           error: function () {
