@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 from flask import Flask, request, send_from_directory, redirect, url_for
 from waitress import serve
 from PIL import Image
@@ -75,4 +76,8 @@ def upload_image():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=9000)
+    if len(sys.argv) == 2:
+        app.run(debug=True, port=8000)
+    else:
+        serve(app, host="0.0.0.0", port=8000)
+

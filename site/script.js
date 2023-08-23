@@ -141,7 +141,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
         formData.append('file', blob, 'upload.jpg');
         formData.append('selected_tile', selected_tile);
-        $.ajax('http://localhost:9000/upload', {
+        $.ajax('/upload', {
           method: 'POST',
           data: formData,
           processData: false,
