@@ -1,21 +1,39 @@
-var tiles = [[0, 0, 5, 5], [5, 0, 3, 3], [8, 0, 4, 3], [5, 3, 4, 3], [9, 3, 3, 3], [12, 0, 3, 3], [0, 5, 5, 4], [5, 6, 3, 3], [12, 3, 3, 4], [0, 9, 4, 4], [4, 9, 4, 5], [8, 6, 4, 4], [12, 7, 3, 3], [8, 10, 3, 4], [11, 10, 4, 3], [11, 13, 4, 4], [0, 13, 4, 3], [4, 14, 3, 3], [0, 16, 4, 4], [7, 14, 4, 3], [4, 17, 4, 3], [8, 17, 3, 3], [11, 17, 4, 3]];
+var tiles;
+var used_tile_idx;
 var selected_tile;
+const multiplier = 20;
 
 $(document).ready(function(){
 
-    var multiplier = 20;
+    var canv;
+    var ctx;
+    var canv_rect;
 
-    const can = document.getElementById('canvas');
-    const ctx = can.getContext('2d');
-    const can_rect = can.getBoundingClientRect();
+    $.ajax('/current', {
+        method: 'GET',
+        success: function (data) {
+            var json = $.parseJSON(data);
+            tiles = json['tiles'];
+            used_tile_idx = json['used_tile_idx'];
+            $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
 
-    draw_tiles(tiles, -1, multiplier, ctx);
+            canv = document.getElementById('canvas');
+            ctx = canv.getContext('2d');
+            canv_rect = canv.getBoundingClientRect();
+
+            draw_tiles(tiles, -1, multiplier, ctx);
+        },
+
+        error: function () {
+
+        },
+    });
 
     $('#canvas').click(function(e) {
-        ctx.clearRect(0, 0, can.width, can.height);
+        ctx.clearRect(0, 0, canv.width, canv.height);
         let mouse_x = e.clientX;
         let mouse_y = e.clientY;
-        selected_tile = find_selected_tile(mouse_x - can_rect.left, mouse_y - can_rect.top, tiles, multiplier);
+        selected_tile = find_selected_tile(mouse_x - canv_rect.left, mouse_y - canv_rect.top, tiles, multiplier);
         if (selected_tile >= 0) {
             $('#select_file_button').show();
         }
@@ -54,14 +72,15 @@ function draw_single_tile(tile, multiplier, ctx) {
 }
 
 function find_selected_tile(event_x, event_y, tiles, multiplier) {
-    for (i in tiles) {
+    for(var i=0; i<tiles.length; i++) {
         let tile = tiles[i];
         let x = tile[0];
         let y = tile[1];
         let width = tile[2];
         let height = tile[3];
         if ((x * multiplier <= event_x) && (event_x < (x + width) * multiplier) &&
-            (y * multiplier <= event_y) && (event_y < (y + height) * multiplier)) {
+            (y * multiplier <= event_y) && (event_y < (y + height) * multiplier) &&
+            !used_tile_idx.includes(i)) {
             return i;
         }
     }
@@ -167,7 +186,7 @@ window.addEventListener('DOMContentLoaded', function () {
           success: function (data) {
             $alert.show().addClass('alert-success').text('Upload success');
             var json = $.parseJSON(data);
-            $('#canvas').css("background-image", "url('https://belarus-image-collage.s3.eu-central-1.amazonaws.com/tiles.png?versionId=" + json['image_version_id'] + "')");
+            $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
           },
 
           error: function () {
