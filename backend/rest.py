@@ -7,12 +7,9 @@ from PIL import Image
 import boto3
 import io
 
-UPLOAD_FOLDER = '/tmp/uploads'
-
 ALL_TILES = [[0, 0, 5, 5], [5, 0, 3, 3], [8, 0, 4, 3], [5, 3, 4, 3], [9, 3, 3, 3], [12, 0, 3, 3], [0, 5, 5, 4], [5, 6, 3, 3], [12, 3, 3, 4], [0, 9, 4, 4], [4, 9, 4, 5], [8, 6, 4, 4], [12, 7, 3, 3], [8, 10, 3, 4], [11, 10, 4, 3], [11, 13, 4, 4], [0, 13, 4, 3], [4, 14, 3, 3], [0, 16, 4, 4], [7, 14, 4, 3], [4, 17, 4, 3], [8, 17, 3, 3], [11, 17, 4, 3]]
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 @app.route('/')
@@ -74,6 +71,20 @@ def upload_image():
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
         aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
     )
+    state_s3_resp = s3.get_object(
+        Bucket=S3_BUCKET,
+        Key=S3_STATE_KEY
+    )
+    state = json.loads(state_s3_resp['Body'].read())
+
+    if selected_tile in state['used_tiles']:
+        return json.dumps({'message': 'Tile already populated'}), 409
+
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+    )
     resp = s3.get_object(
         Bucket=S3_BUCKET,
         Key=S3_CANVAS_KEY
@@ -92,14 +103,21 @@ def upload_image():
     main_img.save(in_mem_file, format=main_img.format)
     in_mem_file.seek(0)
 
-    result = s3.put_object(
+    new_canvas_s3_resp = s3.put_object(
         Bucket=S3_BUCKET,
         Key=S3_CANVAS_KEY,
         Body=in_mem_file
     )
+    canvas_url = CANVAS_BASE_URL + '?versionId=' + new_canvas_s3_resp['VersionId']
 
-    canvas_url = CANVAS_BASE_URL + '?versionId=' + result['VersionId']
-    return json.dumps({'canvas_url': canvas_url})
+    state['used_tiles'].append(selected_tile)
+    s3.put_object(
+        Bucket=S3_BUCKET,
+        Key=S3_STATE_KEY,
+        Body=json.dumps(state)
+    )
+
+    return json.dumps({'canvas_url': canvas_url, 'used_tile_idx': state['used_tiles']})
 
 
 if __name__ == "__main__":

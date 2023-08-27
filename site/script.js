@@ -3,11 +3,11 @@ var used_tile_idx;
 var selected_tile;
 const multiplier = 20;
 
-$(document).ready(function(){
+var canv;
+var ctx;
+var canv_rect;
 
-    var canv;
-    var ctx;
-    var canv_rect;
+$(document).ready(function(){
 
     $.ajax('/current', {
         method: 'GET',
@@ -186,12 +186,19 @@ window.addEventListener('DOMContentLoaded', function () {
           success: function (data) {
             $alert.show().addClass('alert-success').text('Upload success');
             var json = $.parseJSON(data);
+            used_tile_idx = json['used_tile_idx'];
             $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
+            selected_tile = -1;
+            ctx.clearRect(0, 0, canv.width, canv.height);
+            draw_tiles(tiles, selected_tile, multiplier, ctx);
           },
 
           error: function () {
             //avatar.src = initialAvatarURL;
             $alert.show().addClass('alert-warning').text('Upload error');
+            selected_tile = -1;
+            ctx.clearRect(0, 0, canv.width, canv.height);
+            draw_tiles(tiles, selected_tile, multiplier, ctx);
           },
 
           complete: function () {
