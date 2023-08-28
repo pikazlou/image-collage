@@ -42,10 +42,20 @@ $(document).ready(function(){
 });
 
 function draw_tiles(tiles, selected_tile, multiplier, canvas_ctx) {
-    canvas_ctx.strokeStyle = '#ff0000';
+    canvas_ctx.strokeStyle = '#ffffff';
+    canvas_ctx.lineWidth = 2;
+    for(var i=0; i<tiles.length; i++) {
+        if (used_tile_idx.includes(i)) {
+            draw_single_tile(tiles[i], multiplier, canvas_ctx)
+        }
+    }
+
+    canvas_ctx.strokeStyle = '#cc6666';
     canvas_ctx.lineWidth = 1;
-    for (i in tiles) {
-        draw_single_tile(tiles[i], multiplier, canvas_ctx)
+    for(var i=0; i<tiles.length; i++) {
+        if (!used_tile_idx.includes(i)) {
+            draw_single_tile(tiles[i], multiplier, canvas_ctx)
+        }
     }
 
     if (selected_tile >= 0) {
