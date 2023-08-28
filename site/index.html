@@ -18,9 +18,13 @@
         </canvas>
     </div>
     <div style="text-align: center">
-        <label id="select_file_button" class="label" style="display: none">
-            <input type="file" class="sr-only" id="input" name="image" accept="image/*">
-            <div style="background-color: #ccaaaa; border-radius: 10px; padding: 5px 20px;"> Push </div>
+        <div id="code_block" style="display: none">
+            <label for="code">Код:</label>
+            <input type="text" id="code" name="code" placeholder="ABCDE" maxlength="8"><br>
+        </div>
+        <label id="select_file" class="label" style="display: none">
+            <input id="select_file_input" type="file" class="sr-only" name="image" accept="image/*" disabled>
+            <div id="select_file_button" class="button_disabled" style="border-radius: 10px; padding: 5px 20px;"> Загрузіць </div>
         </label>
     </div>
     <div class="progress">

@@ -49,7 +49,8 @@ def get_current_tiles():
         Bucket=S3_BUCKET,
         Key=S3_STATE_KEY
     )
-    used_tiles = json.loads(state_s3_resp['Body'].read())['used_tiles']
+    state = json.loads(state_s3_resp['Body'].read())
+    used_tiles = state['used_tiles']
 
     return json.dumps({'canvas_url': canvas_url, 'tiles': ALL_TILES, 'used_tile_idx': used_tiles})
 
@@ -65,6 +66,7 @@ def upload_image():
         return json.dumps({'message': 'No selected file'}), 400
 
     selected_tile = int(request.form['selected_tile'])
+    code = request.form['code']
 
     s3 = boto3.client(
         "s3",
@@ -79,6 +81,9 @@ def upload_image():
 
     if selected_tile in state['used_tiles']:
         return json.dumps({'message': 'Tile already populated'}), 409
+
+    if code not in state['codes']:
+        return json.dumps({'message': 'Wrong code'}), 400
 
     s3 = boto3.client(
         "s3",

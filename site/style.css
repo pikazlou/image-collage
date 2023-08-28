@@ -14,3 +14,12 @@
 .img-container img {
   max-width: 100%;
 }
+
+.button_enabled {
+    background-color: #aaeeaa;
+
+}
+
+.button_disabled {
+    background-color: #aaaaaa;
+}

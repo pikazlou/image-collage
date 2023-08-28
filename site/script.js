@@ -35,9 +35,30 @@ $(document).ready(function(){
         let mouse_y = e.clientY;
         selected_tile = find_selected_tile(mouse_x - canv_rect.left, mouse_y - canv_rect.top, tiles, multiplier);
         if (selected_tile >= 0) {
-            $('#select_file_button').show();
+            $('#code_block').show()
+            $('#select_file').show();
+        } else {
+            $('#code_block').hide()
+            $('#select_file').hide();
         }
         draw_tiles(tiles, selected_tile, multiplier, ctx);
+    });
+
+    $('#code').bind('keypress', function (event) {
+        var value = String.fromCharCode(event.which);
+        var pattern = new RegExp(/[a-z]/i);
+        return pattern.test(value);
+    });
+
+    $("#code").on("input", function() {
+        let cur_val = $(this).val();
+        if (cur_val.length == 8) {
+            $('#select_file_input').prop("disabled", false);
+            $('#select_file_button').addClass('button_enabled').removeClass('button_disabled');
+        } else {
+            $('#select_file_input').prop("disabled", true);
+            $('#select_file_button').addClass('button_disabled').removeClass('button_enabled');
+        }
     });
 });
 
@@ -101,7 +122,7 @@ function find_selected_tile(event_x, event_y, tiles, multiplier) {
 window.addEventListener('DOMContentLoaded', function () {
   //var avatar = document.getElementById('avatar');
   var image = document.getElementById('image');
-  var input = document.getElementById('input');
+  var input = document.getElementById('select_file_input');
   var $progress = $('.progress');
   var $progressBar = $('.progress-bar');
   var $alert = $('.alert');
@@ -165,11 +186,15 @@ window.addEventListener('DOMContentLoaded', function () {
       //avatar.src = canvas.toDataURL();
       $progress.show();
       $alert.removeClass('alert-success alert-warning');
+
+      let code = $('#code').val();
+
       canvas.toBlob(function (blob) {
         var formData = new FormData();
 
         formData.append('file', blob, 'upload.jpg');
         formData.append('selected_tile', selected_tile);
+        formData.append('code', code);
         $.ajax('/upload', {
           method: 'POST',
           data: formData,
@@ -199,6 +224,8 @@ window.addEventListener('DOMContentLoaded', function () {
             used_tile_idx = json['used_tile_idx'];
             $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
             selected_tile = -1;
+            $('#code_block').hide()
+            $('#select_file').hide();
             ctx.clearRect(0, 0, canv.width, canv.height);
             draw_tiles(tiles, selected_tile, multiplier, ctx);
           },
@@ -207,6 +234,8 @@ window.addEventListener('DOMContentLoaded', function () {
             //avatar.src = initialAvatarURL;
             $alert.show().addClass('alert-warning').text('Upload error');
             selected_tile = -1;
+            $('#code_block').hide()
+            $('#select_file').hide();
             ctx.clearRect(0, 0, canv.width, canv.height);
             draw_tiles(tiles, selected_tile, multiplier, ctx);
           },
