@@ -1,7 +1,12 @@
 import os
 import json
 import sys
-from flask import Flask, request, send_from_directory, redirect, url_for
+import time
+import dataclasses
+from dataclasses import dataclass
+from typing import Any, List
+
+from flask import Flask, request, send_from_directory, redirect
 from waitress import serve
 from PIL import Image
 import boto3
@@ -31,6 +36,34 @@ S3_STATE_KEY = 'state.json'
 CANVAS_BASE_URL = 'https://belarus-image-collage.s3.eu-central-1.amazonaws.com/tiles.png'
 
 
+@dataclass(frozen=True)
+class UsedTile:
+    index: int
+    code: str
+    epoch_seconds: int
+
+
+@dataclass(frozen=True)
+class State:
+    codes: List[str]
+    used_tiles: List[UsedTile]
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]):
+        codes = d['codes']
+        used_tiles = [UsedTile(obj['index'], obj['code'], obj['epoch_seconds']) for obj in d['used_tiles']]
+        return State(codes, used_tiles)
+
+    def used_tile_indices(self):
+        return [tile.index for tile in self.used_tiles]
+
+    def used_tile_by_index(self, index):
+        return next((elem for elem in self.used_tiles if elem.index == index), None)
+
+    def used_tile_by_code(self, code):
+        return next((elem for elem in self.used_tiles if elem.code == code), None)
+
+
 @app.route('/current', methods=['GET'])
 def get_current_tiles():
     s3 = boto3.client(
@@ -45,68 +78,54 @@ def get_current_tiles():
     latest_version_id = next(ver['VersionId'] for ver in canvas_s3_resp['Versions'] if ver['IsLatest'])
     canvas_url = CANVAS_BASE_URL + '?versionId=' + latest_version_id
 
-    state_s3_resp = s3.get_object(
-        Bucket=S3_BUCKET,
-        Key=S3_STATE_KEY
-    )
-    state = json.loads(state_s3_resp['Body'].read())
-    used_tiles = state['used_tiles']
+    state = get_state(s3)
+    used_tile_indices = state.used_tile_indices()
+    allowed_tile_indices = [i for i in range(len(ALL_TILES)) if i not in used_tile_indices]
 
-    return json.dumps({'canvas_url': canvas_url, 'tiles': ALL_TILES, 'used_tile_idx': used_tiles})
+    return json.dumps({'canvas_url': canvas_url, 'tiles': ALL_TILES, 'allowed_tile_indices': allowed_tile_indices})
 
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
     if 'file' not in request.files:
         return json.dumps({'message': 'No file part'}), 400
-    file = request.files['file']
+    new_tile_file = request.files['file']
+
     # If the user does not select a file, the browser submits an
     # empty file without a filename.
-    if file.filename == '':
+    if new_tile_file.filename == '':
         return json.dumps({'message': 'No selected file'}), 400
 
     selected_tile = int(request.form['selected_tile'])
-    code = request.form['code']
+    code = request.form['code'].upper()
 
     s3 = boto3.client(
         "s3",
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
         aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
     )
-    state_s3_resp = s3.get_object(
-        Bucket=S3_BUCKET,
-        Key=S3_STATE_KEY
-    )
-    state = json.loads(state_s3_resp['Body'].read())
 
-    if selected_tile in state['used_tiles']:
-        return json.dumps({'message': 'Tile already populated'}), 409
+    state = get_state(s3)
+    current_epoch_seconds = int(time.time())
 
-    if code not in state['codes']:
+    used_tile_same_index = state.used_tile_by_index(selected_tile)
+    if used_tile_same_index and (used_tile_same_index.code != code or current_epoch_seconds - used_tile_same_index.epoch_seconds > 3600):
+        return json.dumps({'message': 'Tile has been populated already'}), 409
+
+    used_tile_same_code = state.used_tile_by_code(code)
+    if used_tile_same_code and (used_tile_same_code.index != selected_tile):
+        return json.dumps({'message': 'Code has been used already'}), 409
+
+    if code not in state.codes:
         return json.dumps({'message': 'Wrong code'}), 400
 
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
-    )
     resp = s3.get_object(
         Bucket=S3_BUCKET,
         Key=S3_CANVAS_KEY
     )
-    file_stream = resp['Body']
-    main_img = Image.open(file_stream)
+    canvas_file_stream = resp['Body']
 
-    tile_img = Image.open(file.stream)
-
-    multiplier = 150
-
-    tile_img = tile_img.resize((ALL_TILES[selected_tile][2] * multiplier, ALL_TILES[selected_tile][3] * multiplier))
-    main_img.paste(tile_img, (ALL_TILES[selected_tile][0] * multiplier, ALL_TILES[selected_tile][1] * multiplier))
-
-    in_mem_file = io.BytesIO()
-    main_img.save(in_mem_file, format=main_img.format)
-    in_mem_file.seek(0)
+    in_mem_file = apply_tile_to_canvas(new_tile_file.stream, canvas_file_stream, ALL_TILES[selected_tile])
 
     new_canvas_s3_resp = s3.put_object(
         Bucket=S3_BUCKET,
@@ -115,14 +134,42 @@ def upload_image():
     )
     canvas_url = CANVAS_BASE_URL + '?versionId=' + new_canvas_s3_resp['VersionId']
 
-    state['used_tiles'].append(selected_tile)
+    if not used_tile_same_index:
+        state.used_tiles.append(UsedTile(selected_tile, code, current_epoch_seconds))
+
     s3.put_object(
         Bucket=S3_BUCKET,
         Key=S3_STATE_KEY,
-        Body=json.dumps(state)
+        Body=json.dumps(dataclasses.asdict(state))
     )
 
-    return json.dumps({'canvas_url': canvas_url, 'used_tile_idx': state['used_tiles']})
+    used_tile_indices = state.used_tile_indices()
+    allowed_tile_indices = [i for i in range(len(ALL_TILES)) if (i not in used_tile_indices) or (i == selected_tile)]
+
+    return json.dumps({'canvas_url': canvas_url, 'allowed_tile_indices': allowed_tile_indices})
+
+
+def get_state(s3):
+    state_s3_resp = s3.get_object(
+        Bucket=S3_BUCKET,
+        Key=S3_STATE_KEY
+    )
+    return State.from_dict(json.loads(state_s3_resp['Body'].read()))
+
+
+def apply_tile_to_canvas(tile_file_stream, canvas_file_stream, tile_box):
+    canvas_img = Image.open(canvas_file_stream)
+    tile_img = Image.open(tile_file_stream)
+
+    multiplier = 150
+
+    tile_img = tile_img.resize((tile_box[2] * multiplier, tile_box[3] * multiplier))
+    canvas_img.paste(tile_img, (tile_box[0] * multiplier, tile_box[1] * multiplier))
+
+    in_mem_file = io.BytesIO()
+    canvas_img.save(in_mem_file, format=canvas_img.format)
+    in_mem_file.seek(0)
+    return in_mem_file
 
 
 if __name__ == "__main__":

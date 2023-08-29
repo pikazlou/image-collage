@@ -1,5 +1,5 @@
 var tiles;
-var used_tile_idx;
+var allowed_tile_indices;
 var selected_tile;
 const multiplier = 20;
 
@@ -14,7 +14,7 @@ $(document).ready(function(){
         success: function (data) {
             var json = $.parseJSON(data);
             tiles = json['tiles'];
-            used_tile_idx = json['used_tile_idx'];
+            allowed_tile_indices = json['allowed_tile_indices'];
             $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
 
             canv = document.getElementById('canvas');
@@ -66,7 +66,7 @@ function draw_tiles(tiles, selected_tile, multiplier, canvas_ctx) {
     canvas_ctx.strokeStyle = '#ffffff';
     canvas_ctx.lineWidth = 2;
     for(var i=0; i<tiles.length; i++) {
-        if (used_tile_idx.includes(i)) {
+        if (!allowed_tile_indices.includes(i)) {
             draw_single_tile(tiles[i], multiplier, canvas_ctx)
         }
     }
@@ -74,7 +74,7 @@ function draw_tiles(tiles, selected_tile, multiplier, canvas_ctx) {
     canvas_ctx.strokeStyle = '#cc6666';
     canvas_ctx.lineWidth = 1;
     for(var i=0; i<tiles.length; i++) {
-        if (!used_tile_idx.includes(i)) {
+        if (allowed_tile_indices.includes(i)) {
             draw_single_tile(tiles[i], multiplier, canvas_ctx)
         }
     }
@@ -111,7 +111,7 @@ function find_selected_tile(event_x, event_y, tiles, multiplier) {
         let height = tile[3];
         if ((x * multiplier <= event_x) && (event_x < (x + width) * multiplier) &&
             (y * multiplier <= event_y) && (event_y < (y + height) * multiplier) &&
-            !used_tile_idx.includes(i)) {
+            allowed_tile_indices.includes(i)) {
             return i;
         }
     }
@@ -221,7 +221,7 @@ window.addEventListener('DOMContentLoaded', function () {
           success: function (data) {
             $alert.show().addClass('alert-success').text('Upload success');
             var json = $.parseJSON(data);
-            used_tile_idx = json['used_tile_idx'];
+            allowed_tile_indices = json['allowed_tile_indices'];
             $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
             selected_tile = -1;
             $('#code_block').hide()
