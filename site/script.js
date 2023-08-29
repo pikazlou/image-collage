@@ -1,7 +1,7 @@
 var tiles;
 var allowed_tile_indices;
 var selected_tile;
-const multiplier = 20;
+var multiplier;
 
 var canv;
 var ctx;
@@ -14,6 +14,9 @@ $(document).ready(function(){
         success: function (data) {
             var json = $.parseJSON(data);
             tiles = json['tiles'];
+
+            resize_canvas();
+
             allowed_tile_indices = json['allowed_tile_indices'];
             $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
 
@@ -61,6 +64,28 @@ $(document).ready(function(){
         }
     });
 });
+
+function resize_canvas() {
+    let max_tiles_width = 0;
+    let max_tiles_height = 0;
+    for(var i=0; i<tiles.length; i++) {
+        let tile = tiles[i];
+        if (max_tiles_width < tile[0] + tile[2]) {
+            max_tiles_width = tile[0] + tile[2]
+        }
+        if (max_tiles_height < tile[1] + tile[3]) {
+            max_tiles_height = tile[1] + tile[3]
+        }
+    }
+
+    let width_pixels_per_unit = (window.innerWidth - 20) / max_tiles_width;
+    let height_pixels_per_unit = (window.innerHeight - 100) / max_tiles_height;
+    multiplier = Math.floor(Math.min(width_pixels_per_unit, height_pixels_per_unit));
+
+    let canvas = $('#canvas')[0];
+    canvas.width = multiplier * max_tiles_width;
+    canvas.height = multiplier * max_tiles_height;
+}
 
 function draw_tiles(tiles, selected_tile, multiplier, canvas_ctx) {
     canvas_ctx.strokeStyle = '#ffffff';
