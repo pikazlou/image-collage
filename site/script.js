@@ -187,9 +187,36 @@ window.addEventListener('DOMContentLoaded', function () {
     let tile_width = tiles[selected_tile][2];
     let tile_height = tiles[selected_tile][3];
     let aspectRatio = 1.0 * tile_width / tile_height;
+    let minCroppedWidth = tile_width * 100;
+    let minCroppedHeight = tile_height * 100;
     cropper = new Cropper(image, {
       aspectRatio: aspectRatio,
       viewMode: 2,
+      zoomable: true,
+      crop: function (event) {
+//          var width = Math.round(event.detail.width);
+//          var height = Math.round(event.detail.height);
+          var width = event.detail.width;
+          var height = event.detail.height;
+
+          if (
+            width < minCroppedWidth || height < minCroppedHeight
+          ) {
+            cropper.setData({
+              width: Math.max(minCroppedWidth, width),
+              height: Math.max(minCroppedHeight, height),
+            });
+          }
+
+          let data = cropper.getData(true);
+          if (data.width < minCroppedWidth || data.height < minCroppedHeight) {
+            $('#modal_message').show();
+            $('#crop').prop("disabled", true);
+          } else {
+            $('#modal_message').hide();
+            $('#crop').prop("disabled", false);
+          }
+      }
     });
   }).on('hidden.bs.modal', function () {
     cropper.destroy();
