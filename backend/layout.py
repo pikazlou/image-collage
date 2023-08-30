@@ -33,6 +33,8 @@ def try_layout(width, height, tiles):
     tile_heights = set([t[1] for t in tiles])
 
     def inner(matrix, accum):
+        if len(accum) == 1:
+            print(accum)
         cols, rows = np.where(matrix < 0)
         if cols.size == 0:
             return accum
@@ -43,11 +45,11 @@ def try_layout(width, height, tiles):
             cand_yx, cand_yy = np.where(diff_y < -100)
             candidate_points = np.append(np.dstack((cand_xx + 1, cand_xy))[0], np.dstack((cand_yx, cand_yy + 1))[0], axis=0)
             if candidate_points.size > 0:
-                insert_points = []
+                best_choice = (1000, 1000)
                 for _x, _y in candidate_points:
-                    if ((_x == 0) or (matrix[_x - 1, _y] > 0)) and ((_y == 0) or (matrix[_x, _y - 1] > 0)):
-                        insert_points.append((_x, _y))
-                x, y = random.choice(insert_points)
+                    if _x + _y < best_choice[0] + best_choice[1]:
+                        best_choice = (_x, _y)
+                x, y = best_choice
             else:
                 x = 0
                 y = 0
@@ -94,9 +96,11 @@ def display_tiles_console(tiles):
         print()
 
 
-def display_tiles_pil(tiles):
-    mult = 50
+def display_tiles_pil(width, height, tiles):
     img = Image.new("RGBA", (2000, 2000))
+    w_ratio = int(2000 / width)
+    h_ratio = int(2000 / height)
+    mult = min(w_ratio, h_ratio)
     draw = ImageDraw.Draw(img)
     for t in tiles:
         coords = [
@@ -111,6 +115,6 @@ def display_tiles_pil(tiles):
 
 
 if __name__ == '__main__':
-    layout = try_layout(15, 20, [(3, 3), (4, 4), (3, 4), (4, 3), (4, 5), (5, 4), (5, 5)])
+    layout = try_layout(30, 40, [(4, 4), (4, 6), (6, 4), (6, 6), (6, 8), (8, 6)])
     print(layout)
-    display_tiles_pil(layout)
+    display_tiles_pil(30, 40, layout)
