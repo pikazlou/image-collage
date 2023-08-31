@@ -23,3 +23,15 @@
 .button_disabled {
     background-color: #aaaaaa;
 }
+
+#code_block {
+    margin: 5px 0;
+}
+
+.invalid_code_input {
+    background-color: #eeaaaa;
+}
+
+.valid_code_input {
+    background-color: #aaeeaa;
+}

@@ -8,6 +8,9 @@ var canv;
 var ctx;
 var canv_rect;
 
+var cropbox_too_small = false;
+var code_is_valid = false;
+
 $(document).ready(function(){
 
     $.ajax('/current', {
@@ -40,10 +43,8 @@ $(document).ready(function(){
         let mouse_y = e.clientY;
         selected_tile = find_selected_tile(mouse_x - canv_rect.left, mouse_y - canv_rect.top, tiles, multiplier);
         if (selected_tile >= 0) {
-            $('#code_block').show()
             $('#select_file').show();
         } else {
-            $('#code_block').hide()
             $('#select_file').hide();
         }
         draw_tiles(tiles, selected_tile, multiplier, ctx);
@@ -58,12 +59,13 @@ $(document).ready(function(){
     $("#code").on("input", function() {
         let cur_val = $(this).val();
         if (cur_val.length == 8) {
-            $('#select_file_input').prop("disabled", false);
-            $('#select_file_button').addClass('button_enabled').removeClass('button_disabled');
+            code_is_valid = true;
+            $(this).removeClass('invalid_code_input').addClass('valid_code_input');
         } else {
-            $('#select_file_input').prop("disabled", true);
-            $('#select_file_button').addClass('button_disabled').removeClass('button_enabled');
+            code_is_valid = false;
+            $(this).removeClass('valid_code_input').addClass('invalid_code_input');
         }
+        toggle_enabled_for_crop_button();
     });
 });
 
@@ -143,6 +145,14 @@ function find_selected_tile(event_x, event_y, tiles, multiplier) {
         }
     }
     return -1;
+}
+
+function toggle_enabled_for_crop_button() {
+    if (!cropbox_too_small && code_is_valid) {
+        $('#crop').prop("disabled", false);
+    } else {
+        $('#crop').prop("disabled", true);
+    }
 }
 
 
@@ -236,10 +246,12 @@ window.addEventListener('DOMContentLoaded', function () {
           let data = cropper.getData();
           if (Math.round(data.width) < minCroppedWidth || Math.round(data.height) < minCroppedHeight) {
             $('#modal_message').show();
-            $('#crop').prop("disabled", true);
+            cropbox_too_small = true;
+            toggle_enabled_for_crop_button();
           } else {
             $('#modal_message').hide();
-            $('#crop').prop("disabled", false);
+            cropbox_too_small = false;
+            toggle_enabled_for_crop_button();
           }
       }
     });
@@ -301,7 +313,6 @@ window.addEventListener('DOMContentLoaded', function () {
             allowed_tile_indices = json['allowed_tile_indices'];
             $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
             selected_tile = -1;
-            $('#code_block').hide()
             $('#select_file').hide();
             ctx.clearRect(0, 0, canv.width, canv.height);
             draw_tiles(tiles, selected_tile, multiplier, ctx);
@@ -318,7 +329,6 @@ window.addEventListener('DOMContentLoaded', function () {
             $alert.show().addClass('alert-warning').text(msg);
 
             selected_tile = -1;
-            $('#code_block').hide()
             $('#select_file').hide();
             ctx.clearRect(0, 0, canv.width, canv.height);
             draw_tiles(tiles, selected_tile, multiplier, ctx);

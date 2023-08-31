@@ -21,13 +21,9 @@
         </canvas>
     </div>
     <div style="text-align: center">
-        <div id="code_block" style="display: none">
-            <label for="code">Код:</label>
-            <input type="text" id="code" name="code" placeholder="ABCDEFGH" maxlength="8" style="text-transform:uppercase"><br>
-        </div>
         <label id="select_file" class="label" style="display: none">
-            <input id="select_file_input" type="file" class="sr-only" name="image" accept="image/*" disabled>
-            <div id="select_file_button" class="button_disabled" style="border-radius: 10px; padding: 5px 20px;"> Выбраць </div>
+            <input id="select_file_input" type="file" class="sr-only" name="image" accept="image/*">
+            <div id="select_file_button" class="button_enabled" style="border-radius: 10px; padding: 5px 20px;"> Выбраць </div>
         </label>
     </div>
     <div class="progress">
@@ -50,10 +46,15 @@
               <div id="modal_message" style="display: none; color: #cc3333; font-weight: bold">
                 Выбраная частка занадта маленькая!
               </div>
+              <div id="code_block">
+                <label for="code">Код*:</label>
+                <input type="text" id="code" name="code" class="invalid_code_input" placeholder="ABCDEFGH" maxlength="8" style="text-transform:uppercase"><br>
+            </div>
           </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Скасаваць</button>
-            <button type="button" class="btn btn-primary" id="crop">Выбраць</button>
+            <button type="button" class="btn btn-primary" id="crop" disabled>Выбраць</button>
           </div>
         </div>
       </div>
