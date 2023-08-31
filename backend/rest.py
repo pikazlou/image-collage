@@ -90,13 +90,13 @@ def get_current_tiles():
 @app.route('/upload', methods=['POST'])
 def upload_image():
     if 'file' not in request.files:
-        return json.dumps({'message': 'No file part'}), 400
+        return json.dumps({'message': 'Адсутнічае файл'}), 400
     new_tile_file = request.files['file']
 
     # If the user does not select a file, the browser submits an
     # empty file without a filename.
     if new_tile_file.filename == '':
-        return json.dumps({'message': 'No selected file'}), 400
+        return json.dumps({'message': 'Файл не выбраны'}), 400
 
     selected_tile = int(request.form['selected_tile'])
     code = request.form['code'].upper()
@@ -112,14 +112,14 @@ def upload_image():
 
     used_tile_same_index = state.used_tile_by_index(selected_tile)
     if used_tile_same_index and (used_tile_same_index.code != code or current_epoch_seconds - used_tile_same_index.epoch_seconds > 3600):
-        return json.dumps({'message': 'Tile has been populated already'}), 409
+        return json.dumps({'message': 'Гэтае месца ўжо запоўненае'}), 409
 
     used_tile_same_code = state.used_tile_by_code(code)
     if used_tile_same_code and (used_tile_same_code.index != selected_tile):
-        return json.dumps({'message': 'Code has been used already'}), 409
+        return json.dumps({'message': 'Код быў ужо выкарыстаны'}), 409
 
     if code not in state.codes:
-        return json.dumps({'message': 'Wrong code'}), 400
+        return json.dumps({'message': 'Няправільны код'}), 400
 
     resp = s3.get_object(
         Bucket=S3_BUCKET,

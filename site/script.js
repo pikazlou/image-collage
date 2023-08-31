@@ -296,7 +296,7 @@ window.addEventListener('DOMContentLoaded', function () {
           },
 
           success: function (data) {
-            $alert.show().addClass('alert-success').text('Upload success');
+            $alert.show().addClass('alert-success').text('Запампавана паспяхова');
             var json = $.parseJSON(data);
             allowed_tile_indices = json['allowed_tile_indices'];
             $('#canvas').css("background-image", "url(" + json['canvas_url'] + ")");
@@ -307,9 +307,16 @@ window.addEventListener('DOMContentLoaded', function () {
             draw_tiles(tiles, selected_tile, multiplier, ctx);
           },
 
-          error: function () {
+          error: function (xhr, status, error) {
             //avatar.src = initialAvatarURL;
-            $alert.show().addClass('alert-warning').text('Upload error');
+            let msg;
+            try {
+                msg = JSON.parse(xhr.responseText)['message'];
+            } catch (e) {
+                msg = 'Памылка';
+            }
+            $alert.show().addClass('alert-warning').text(msg);
+
             selected_tile = -1;
             $('#code_block').hide()
             $('#select_file').hide();

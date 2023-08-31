@@ -8,12 +8,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" integrity="sha512-cyzxRvewl+FOKTtpBzYjW6x6IAYUCZy3sGP40hn+DQkqeluGRCax7qztK2ImL64SA+C7kVWdLI6wvdlStawhyw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://unpkg.com/bootstrap@4/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://unpkg.com/bootstrap@4/dist/css/bootstrap.min.css" crossorigin="anonymous">
-    <script src="script.js?version=3"></script>
-    <link rel="stylesheet" href="style.css?version=3">
+    <script src="script.js?version=4"></script>
+    <link rel="stylesheet" href="style.css?version=4">
 </head>
 <body>
+    <h6 style="text-align: center; margin: 5px 0">
+        Беларуская культура гэта...
+    </h6>
     <div style="text-align: center">
-        <canvas id="canvas" style="margin: 10px; background-size: 100% 100%;">
+        <canvas id="canvas" style="margin: 0 10px; background-size: 100% 100%;">
             Your browser doesn't support canvas
         </canvas>
     </div>
@@ -24,7 +27,7 @@
         </div>
         <label id="select_file" class="label" style="display: none">
             <input id="select_file_input" type="file" class="sr-only" name="image" accept="image/*" disabled>
-            <div id="select_file_button" class="button_disabled" style="border-radius: 10px; padding: 5px 20px;"> Загрузіць </div>
+            <div id="select_file_button" class="button_disabled" style="border-radius: 10px; padding: 5px 20px;"> Выбраць </div>
         </label>
     </div>
     <div class="progress">
@@ -35,7 +38,7 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="modalLabel">Crop the image</h5>
+            <h5 class="modal-title" id="modalLabel">Вызначце частку відарыса</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -49,8 +52,8 @@
               </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="crop">Crop</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Скасаваць</button>
+            <button type="button" class="btn btn-primary" id="crop">Выбраць</button>
           </div>
         </div>
       </div>
