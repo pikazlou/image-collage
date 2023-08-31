@@ -1,4 +1,5 @@
 var tiles;
+var pixels_per_tile_unit;
 var allowed_tile_indices;
 var selected_tile;
 var multiplier;
@@ -14,6 +15,7 @@ $(document).ready(function(){
         success: function (data) {
             var json = $.parseJSON(data);
             tiles = json['tiles'];
+            pixels_per_tile_unit = json['pixels_per_tile_unit'];
 
             resize_canvas();
 
@@ -187,29 +189,52 @@ window.addEventListener('DOMContentLoaded', function () {
     let tile_width = tiles[selected_tile][2];
     let tile_height = tiles[selected_tile][3];
     let aspectRatio = 1.0 * tile_width / tile_height;
-    let minCroppedWidth = tile_width * 100;
-    let minCroppedHeight = tile_height * 100;
+    let minCroppedWidth = tile_width * pixels_per_tile_unit;
+    let minCroppedHeight = tile_height * pixels_per_tile_unit;
+    var recursion = false;
     cropper = new Cropper(image, {
       aspectRatio: aspectRatio,
       viewMode: 2,
       zoomable: true,
       crop: function (event) {
-//          var width = Math.round(event.detail.width);
-//          var height = Math.round(event.detail.height);
-          var width = event.detail.width;
-          var height = event.detail.height;
+          var width = Math.round(event.detail.width);
+          var height = Math.round(event.detail.height);
 
-          if (
-            width < minCroppedWidth || height < minCroppedHeight
-          ) {
+
+//          var width = event.detail.width;
+//          var height = event.detail.height;
+
+//          if (
+//            width < minCroppedWidth || height < minCroppedHeight
+//          ) {
+//            if (last_call_width != width || last_call_height != height) {
+//                last_call_width = width;
+//                last_call_height = height;
+//                cropper.setData({
+//                  width: minCroppedWidth + 10,
+//                  height: minCroppedHeight + 10,
+//                });
+//            } else {
+//                $('#modal_message').show();
+//                $('#crop').prop("disabled", true);
+//            }
+//          } else {
+//            $('#modal_message').hide();
+//            $('#crop').prop("disabled", false);
+//          }
+
+          if (!recursion && (width < minCroppedWidth || height < minCroppedHeight)) {
+            recursion = true;
             cropper.setData({
-              width: Math.max(minCroppedWidth, width),
-              height: Math.max(minCroppedHeight, height),
+              width: minCroppedWidth,
+              height: minCroppedHeight,
             });
           }
 
-          let data = cropper.getData(true);
-          if (data.width < minCroppedWidth || data.height < minCroppedHeight) {
+          recursion = false;
+
+          let data = cropper.getData();
+          if (Math.round(data.width) < minCroppedWidth || Math.round(data.height) < minCroppedHeight) {
             $('#modal_message').show();
             $('#crop').prop("disabled", true);
           } else {

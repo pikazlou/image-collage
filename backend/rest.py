@@ -12,7 +12,8 @@ from PIL import Image
 import boto3
 import io
 
-ALL_TILES = [[0, 0, 5, 5], [5, 0, 3, 3], [8, 0, 4, 3], [5, 3, 4, 3], [9, 3, 3, 3], [12, 0, 3, 3], [0, 5, 5, 4], [5, 6, 3, 3], [12, 3, 3, 4], [0, 9, 4, 4], [4, 9, 4, 5], [8, 6, 4, 4], [12, 7, 3, 3], [8, 10, 3, 4], [11, 10, 4, 3], [11, 13, 4, 4], [0, 13, 4, 3], [4, 14, 3, 3], [0, 16, 4, 4], [7, 14, 4, 3], [4, 17, 4, 3], [8, 17, 3, 3], [11, 17, 4, 3]]
+ALL_TILES = [(0, 0, 6, 8), (6, 0, 4, 4), (0, 8, 8, 6), (6, 4, 6, 4), (10, 0, 6, 4), (0, 14, 6, 8), (8, 8, 6, 6), (12, 4, 4, 4), (16, 0, 6, 8), (6, 14, 6, 4), (14, 8, 8, 6), (22, 0, 8, 6), (0, 22, 4, 4), (6, 18, 4, 4), (4, 22, 6, 6), (12, 14, 4, 4), (0, 26, 4, 6), (10, 18, 8, 6), (22, 6, 4, 4), (16, 14, 6, 4), (4, 28, 6, 8), (22, 10, 4, 6), (26, 6, 4, 6), (0, 32, 4, 4), (10, 24, 4, 4), (18, 18, 4, 4), (0, 36, 6, 4), (10, 28, 4, 6), (14, 24, 4, 6), (22, 16, 8, 6), (26, 12, 4, 4), (18, 22, 6, 4), (6, 36, 4, 4), (10, 34, 8, 6), (14, 30, 4, 4), (18, 26, 6, 8), (24, 22, 6, 8), (18, 34, 6, 6), (24, 30, 6, 6), (24, 36, 6, 4)]
+PIXELS_PER_TILE_UNIT = 100
 
 app = Flask(__name__)
 
@@ -82,7 +83,8 @@ def get_current_tiles():
     used_tile_indices = state.used_tile_indices()
     allowed_tile_indices = [i for i in range(len(ALL_TILES)) if i not in used_tile_indices]
 
-    return json.dumps({'canvas_url': canvas_url, 'tiles': ALL_TILES, 'allowed_tile_indices': allowed_tile_indices})
+    return json.dumps({'canvas_url': canvas_url, 'tiles': ALL_TILES,
+                       'allowed_tile_indices': allowed_tile_indices, 'pixels_per_tile_unit': PIXELS_PER_TILE_UNIT})
 
 
 @app.route('/upload', methods=['POST'])
@@ -161,10 +163,8 @@ def apply_tile_to_canvas(tile_file_stream, canvas_file_stream, tile_box):
     canvas_img = Image.open(canvas_file_stream)
     tile_img = Image.open(tile_file_stream)
 
-    multiplier = 150
-
-    tile_img = tile_img.resize((tile_box[2] * multiplier, tile_box[3] * multiplier))
-    canvas_img.paste(tile_img, (tile_box[0] * multiplier, tile_box[1] * multiplier))
+    tile_img = tile_img.resize((tile_box[2] * PIXELS_PER_TILE_UNIT, tile_box[3] * PIXELS_PER_TILE_UNIT))
+    canvas_img.paste(tile_img, (tile_box[0] * PIXELS_PER_TILE_UNIT, tile_box[1] * PIXELS_PER_TILE_UNIT))
 
     in_mem_file = io.BytesIO()
     canvas_img.save(in_mem_file, format=canvas_img.format)
