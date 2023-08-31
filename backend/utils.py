@@ -8,6 +8,5 @@ def generate_code():
 
 
 if __name__ == "__main__":
-    codes = [generate_code() for _ in range(30)]
-    print(codes)
+    codes = [generate_code() for _ in range(100)]
     print(json.dumps(codes))
