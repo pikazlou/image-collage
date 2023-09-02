@@ -176,5 +176,5 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         app.run(debug=True, port=8000)
     else:
-        serve(app, host="0.0.0.0", port=80)
+        serve(app, host="0.0.0.0", port=8000)
 
