@@ -30,6 +30,8 @@ $(document).ready(function(){
             canv_rect = canv.getBoundingClientRect();
 
             draw_tiles(tiles, -1, multiplier, ctx);
+
+            $('.overlay').hide();
         },
 
         error: function () {
@@ -38,6 +40,8 @@ $(document).ready(function(){
     });
 
     $('#canvas').click(function(e) {
+        $('.alert').hide();
+
         ctx.clearRect(0, 0, canv.width, canv.height);
         let mouse_x = e.clientX;
         let mouse_y = e.clientY;
@@ -160,8 +164,6 @@ window.addEventListener('DOMContentLoaded', function () {
   //var avatar = document.getElementById('avatar');
   var image = document.getElementById('image');
   var input = document.getElementById('select_file_input');
-  var $progress = $('.progress');
-  var $progressBar = $('.progress-bar');
   var $alert = $('.alert');
   var $modal = $('#modal');
   var cropper;
@@ -273,7 +275,6 @@ window.addEventListener('DOMContentLoaded', function () {
       });
       //initialAvatarURL = avatar.src;
       //avatar.src = canvas.toDataURL();
-      $progress.show();
       $alert.removeClass('alert-success alert-warning');
 
       let code = $('#code').val();
@@ -284,28 +285,14 @@ window.addEventListener('DOMContentLoaded', function () {
         formData.append('file', blob, 'upload.jpg');
         formData.append('selected_tile', selected_tile);
         formData.append('code', code);
+
+        $('.overlay').show();
+
         $.ajax('/upload', {
           method: 'POST',
           data: formData,
           processData: false,
           contentType: false,
-
-          xhr: function () {
-            var xhr = new XMLHttpRequest();
-
-            xhr.upload.onprogress = function (e) {
-              var percent = '0';
-              var percentage = '0%';
-
-              if (e.lengthComputable) {
-                percent = Math.round((e.loaded / e.total) * 100);
-                percentage = percent + '%';
-                $progressBar.width(percentage).attr('aria-valuenow', percent).text(percentage);
-              }
-            };
-
-            return xhr;
-          },
 
           success: function (data) {
             $alert.show().addClass('alert-success').text('Запампавана паспяхова');
@@ -335,7 +322,7 @@ window.addEventListener('DOMContentLoaded', function () {
           },
 
           complete: function () {
-            $progress.hide();
+            $('.overlay').hide();
           },
         });
       });
