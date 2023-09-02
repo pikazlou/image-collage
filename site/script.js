@@ -161,7 +161,6 @@ function toggle_enabled_for_crop_button() {
 
 
 window.addEventListener('DOMContentLoaded', function () {
-  //var avatar = document.getElementById('avatar');
   var image = document.getElementById('image');
   var input = document.getElementById('select_file_input');
   var $alert = $('.alert');
@@ -212,29 +211,6 @@ window.addEventListener('DOMContentLoaded', function () {
           var width = Math.round(event.detail.width);
           var height = Math.round(event.detail.height);
 
-
-//          var width = event.detail.width;
-//          var height = event.detail.height;
-
-//          if (
-//            width < minCroppedWidth || height < minCroppedHeight
-//          ) {
-//            if (last_call_width != width || last_call_height != height) {
-//                last_call_width = width;
-//                last_call_height = height;
-//                cropper.setData({
-//                  width: minCroppedWidth + 10,
-//                  height: minCroppedHeight + 10,
-//                });
-//            } else {
-//                $('#modal_message').show();
-//                $('#crop').prop("disabled", true);
-//            }
-//          } else {
-//            $('#modal_message').hide();
-//            $('#crop').prop("disabled", false);
-//          }
-
           if (!recursion && (width < minCroppedWidth || height < minCroppedHeight)) {
             recursion = true;
             cropper.setData({
@@ -263,18 +239,12 @@ window.addEventListener('DOMContentLoaded', function () {
   });
 
   document.getElementById('crop').addEventListener('click', function () {
-    //var initialAvatarURL;
     var canvas;
 
     $modal.modal('hide');
 
     if (cropper) {
-      canvas = cropper.getCroppedCanvas({
-        //width: 160,
-        //height: 160,
-      });
-      //initialAvatarURL = avatar.src;
-      //avatar.src = canvas.toDataURL();
+      canvas = cropper.getCroppedCanvas({});
       $alert.removeClass('alert-success alert-warning');
 
       let code = $('#code').val();
@@ -306,7 +276,6 @@ window.addEventListener('DOMContentLoaded', function () {
           },
 
           error: function (xhr, status, error) {
-            //avatar.src = initialAvatarURL;
             let msg;
             try {
                 msg = JSON.parse(xhr.responseText)['message'];
