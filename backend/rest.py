@@ -2,15 +2,19 @@ import os
 import json
 import sys
 import time
+from time import strftime
+import io
 import dataclasses
 from dataclasses import dataclass
 from typing import Any, List
+from PIL import Image
+import boto3
+import logging
+from logging.handlers import RotatingFileHandler
 
 from flask import Flask, request, send_from_directory, redirect
 from waitress import serve
-from PIL import Image
-import boto3
-import io
+
 
 ALL_TILES = [(0, 0, 6, 8), (6, 0, 4, 4), (0, 8, 8, 6), (6, 4, 6, 4), (10, 0, 6, 4), (0, 14, 6, 8), (8, 8, 6, 6), (12, 4, 4, 4), (16, 0, 6, 8), (6, 14, 6, 4), (14, 8, 8, 6), (22, 0, 8, 6), (0, 22, 4, 4), (6, 18, 4, 4), (4, 22, 6, 6), (12, 14, 4, 4), (0, 26, 4, 6), (10, 18, 8, 6), (22, 6, 4, 4), (16, 14, 6, 4), (4, 28, 6, 8), (22, 10, 4, 6), (26, 6, 4, 6), (0, 32, 4, 4), (10, 24, 4, 4), (18, 18, 4, 4), (0, 36, 6, 4), (10, 28, 4, 6), (14, 24, 4, 6), (22, 16, 8, 6), (26, 12, 4, 4), (18, 22, 6, 4), (6, 36, 4, 4), (10, 34, 8, 6), (14, 30, 4, 4), (18, 26, 6, 8), (24, 22, 6, 8), (18, 34, 6, 6), (24, 30, 6, 6), (24, 36, 6, 4)]
 PIXELS_PER_TILE_UNIT = 100
@@ -20,20 +24,19 @@ app = Flask(__name__)
 
 @app.route('/')
 def root():
+    logger.info('%s <ip>:%s <path>:%s', strftime('[%Y-%b-%d %H:%M:%S]'), request.remote_addr, 'root')
     return redirect('index.html')
 
 
 @app.route('/<path:path>')
 def serve_static(path):
-    print(path)
+    logger.info('%s <ip>:%s <path>:%s', strftime('[%Y-%b-%d %H:%M:%S]'), request.remote_addr, path)
     return send_from_directory('../site', path)
 
 
 S3_BUCKET = 'belarus-image-collage'
 S3_CANVAS_KEY = 'tiles.png'
 S3_STATE_KEY = 'state.json'
-
-
 CANVAS_BASE_URL = 'https://belarus-image-collage.s3.eu-central-1.amazonaws.com/tiles.png'
 
 
@@ -67,6 +70,7 @@ class State:
 
 @app.route('/current', methods=['GET'])
 def get_current_tiles():
+    logger.info('%s <ip>:%s <path>:%s', strftime('[%Y-%b-%d %H:%M:%S]'), request.remote_addr, '/current')
     s3 = boto3.client(
         "s3",
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -89,6 +93,8 @@ def get_current_tiles():
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
+    logger.info('%s <ip>:%s <path>:%s <headers>:%s', strftime('[%Y-%b-%d %H:%M:%S]'), request.remote_addr, '/upload',
+                request.headers)
     if 'file' not in request.files:
         return json.dumps({'message': 'Адсутнічае файл'}), 400
     new_tile_file = request.files['file']
@@ -173,6 +179,10 @@ def apply_tile_to_canvas(tile_file_stream, canvas_file_stream, tile_box):
 
 
 if __name__ == "__main__":
+    handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
+    logger = logging.getLogger('tdm')
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
     if len(sys.argv) == 2:
         app.run(debug=True, port=8000)
     else:
