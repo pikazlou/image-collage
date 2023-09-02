@@ -18,6 +18,7 @@ from waitress import serve
 
 ALL_TILES = [(0, 0, 6, 8), (6, 0, 4, 4), (0, 8, 8, 6), (6, 4, 6, 4), (10, 0, 6, 4), (0, 14, 6, 8), (8, 8, 6, 6), (12, 4, 4, 4), (16, 0, 6, 8), (6, 14, 6, 4), (14, 8, 8, 6), (22, 0, 8, 6), (0, 22, 4, 4), (6, 18, 4, 4), (4, 22, 6, 6), (12, 14, 4, 4), (0, 26, 4, 6), (10, 18, 8, 6), (22, 6, 4, 4), (16, 14, 6, 4), (4, 28, 6, 8), (22, 10, 4, 6), (26, 6, 4, 6), (0, 32, 4, 4), (10, 24, 4, 4), (18, 18, 4, 4), (0, 36, 6, 4), (10, 28, 4, 6), (14, 24, 4, 6), (22, 16, 8, 6), (26, 12, 4, 4), (18, 22, 6, 4), (6, 36, 4, 4), (10, 34, 8, 6), (14, 30, 4, 4), (18, 26, 6, 8), (24, 22, 6, 8), (18, 34, 6, 6), (24, 30, 6, 6), (24, 36, 6, 4)]
 PIXELS_PER_TILE_UNIT = 100
+PIXELS_PER_TILE_THUMBNAIL = 25
 
 app = Flask(__name__)
 
@@ -36,6 +37,7 @@ def serve_static(path):
 
 S3_BUCKET = 'belarus-image-collage'
 S3_CANVAS_KEY = 'tiles.png'
+S3_TILES_KEY = 'tiles/'
 S3_STATE_KEY = 'state.json'
 CANVAS_BASE_URL = 'https://belarus-image-collage.s3.eu-central-1.amazonaws.com/tiles.png'
 
@@ -127,6 +129,12 @@ def upload_image():
     if code not in state.codes:
         return json.dumps({'message': 'Няправільны код'}), 400
 
+    s3.put_object(
+        Bucket=S3_BUCKET,
+        Key=S3_TILES_KEY + f"{selected_tile}_{strftime('%Y-%b-%dT%H:%M:%S')}.png",
+        Body=new_tile_file.stream
+    )
+
     resp = s3.get_object(
         Bucket=S3_BUCKET,
         Key=S3_CANVAS_KEY
@@ -169,8 +177,8 @@ def apply_tile_to_canvas(tile_file_stream, canvas_file_stream, tile_box):
     canvas_img = Image.open(canvas_file_stream)
     tile_img = Image.open(tile_file_stream)
 
-    tile_img = tile_img.resize((tile_box[2] * PIXELS_PER_TILE_UNIT, tile_box[3] * PIXELS_PER_TILE_UNIT))
-    canvas_img.paste(tile_img, (tile_box[0] * PIXELS_PER_TILE_UNIT, tile_box[1] * PIXELS_PER_TILE_UNIT))
+    tile_img = tile_img.resize((tile_box[2] * PIXELS_PER_TILE_THUMBNAIL, tile_box[3] * PIXELS_PER_TILE_THUMBNAIL))
+    canvas_img.paste(tile_img, (tile_box[0] * PIXELS_PER_TILE_THUMBNAIL, tile_box[1] * PIXELS_PER_TILE_THUMBNAIL))
 
     in_mem_file = io.BytesIO()
     canvas_img.save(in_mem_file, format=canvas_img.format)
