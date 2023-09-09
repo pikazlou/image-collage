@@ -187,7 +187,7 @@ def apply_tile_to_canvas(tile_file_stream, canvas_file_stream, tile_box):
 
 
 if __name__ == "__main__":
-    handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
+    handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=10)
     logger = logging.getLogger('tdm')
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
